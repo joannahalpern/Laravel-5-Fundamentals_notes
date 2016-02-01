@@ -1,0 +1,56 @@
+#21.0 Many to Many Relationships#
+
+Let's say you have an articles table and a tags table and you want to create a many to many relation between the 2. First you'd need to create a pivot table which keeps track of the relations btwn the articles and tags.
+
+###Create Migration Pivot Table###
+```
+        Schema::create('article_tag', function(Blueprint $table)
+        {
+            $table->integer('article_id')->unsigned()->index();
+            $table->foreign('article_id')->references('id')->on('articles')
+		          ->onDelete('cascade');
+
+            $table->integer('tag_id')->unsigned()->index();
+            $table->foreign('tag_id')->references('id')->on('tags')
+		          ->onDelete('cascade');
+
+            $table->timestamps();
+        });
+```
+
+###Add **belongsToMany()** to Models###
+In the Tag model add:
+```
+	public function articles()
+    {
+        return $this->belongsToMany('App\Article')->withTimestamps();
+        /*or*/
+        /* return $this->belongsToMany('App\Article', "name_of_pivot", "article_identifier"); */
+    }
+```
+And in the Article model add:
+```
+    public function tags()
+    {
+        return $this->belongsToMany('App\Tag')->withTimestamps();
+    }
+}
+```
+- **note**: if the table does not have timestamps, then omit `->withTimestamps()`
+
+
+###Add data to the article_tag table###
+- `$article->tags()->attach(1)` - this attaches tag with id=1 to the article
+
+**Example**
+
+	$article = App\Article::find(3)
+	$article->tags()->attach(1)
+
+adds the following to the article_tag table: 
+article_id| tag_id
+--------  | ---
+3         | 1
+
+
+**Excercise** - try this out with tinker

@@ -1,0 +1,96 @@
+#Basic Model/Controller/View Workflow#
+
+##Creating a Controller and View##
+1. Register the route
+    * In App/Http/reoutes.php add `Route::get('articles', 'ArticlesController@index');`
+    * This means that when you go to url www.myWebsite.com/articles then the index() method in ArticlesController will run.
+2. Create a controller
+    * `$php artisan make:controller ArticlesController --plain`
+3. Add the namespace
+    * `use App\Article;`
+4. Bring in the articles and return the view
+    ```
+	class ArticlesController extends Controller {
+
+	    public function index()
+	    {
+	        $articles = Article::all();
+
+	        return view('articles.index', compact('articles')); 
+	      //or equivalently
+	        return view('articles.index')->with('articles', $articles);
+	    }
+	}
+	```
+5. **Create the View** 
+	* in resources/views/articles create `index.blade.php`
+	```
+    @extends('app')
+
+   @section('content')
+    <h1>Articles</h1>
+
+    @foreach($articles as $article)
+        <article>
+            <h2>{{ $article->title }}</h2>
+
+            <div class="body">{{ $article->body }}</div>
+        </article>
+
+    @endforeach
+
+    @stop
+	```
+
+##Add url dependent on the data##
+1. Add this to routes
+	`Route::get('articles/{id}', 'ArticlesController@show');`
+	- {id} means we want to capture anything in this segment of the uri
+2. and this in your controller
+	```
+	   public function show($id)
+	   {
+		   $article = Article::findOrFail($id);
+	       return view('articles.show', compact('article'));
+	   }
+	   
+	```
+3. now add the view called `show.blade.php`
+	```
+	@extends('app')
+
+		@section('content')
+	    <h2>{{ $article->title }}</h2>
+
+	    <div class="body">{{ $article->body }}</div>
+
+	@stop
+	```
+4. Now to add a url to the view articles/index page. There are three ways to do this which all go in the %%%%%%%% following
+	```
+	@extends('app')
+
+	@section('content')
+    <h1>Articles</h1>
+
+    @foreach($articles as $article)
+        <article>
+            <h2>
+                <a href="%%%%%%%%%%">{{ $article->title }}</a>
+            </h2>
+
+            <div class="body">{{ $article->body }}</div>
+        </article>
+
+    @endforeach
+
+    @stop
+	```
+	a. `{{ action('ArticlesController@show', [$article->id]) }}`
+	b. `{{ url('/articles', $article->id) }}`
+	c. `{{ route('article_path') }}`
+
+
+##Useful methods##
+- dd($article)
+- isNull()

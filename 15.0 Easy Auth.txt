@@ -1,0 +1,25 @@
+## Easy Auth ##
+
+In your routes you can put 
+```
+Route::controllers([
+	'auth' => 'Auth\AuthController',
+	'password' => 'Auth\PasswordController',
+]);
+```
+and the do `getFoo` or orwhatever
+but this is not reccomended
+
+In `ArticlesController`, if we type
+```
+public function index()
+{
+	return \Auth::user()->name
+}
+```
+then if you're logged in, it'll print your name
+
+
+
+**Extra**
+Checkout illuminate/support/helpers to see functions we can do on arrays

@@ -1,0 +1,66 @@
+# One to One Relations Example #
+
+In this example we'll be relating users table to profiles table which each user **has one** and only one profile. The profiles table refers to the users table with user_id which is a foreign key.
+
+![](https://bitbucket.org/wiseleap/documentation/raw/master/images/laravel/OneToOne.jpg | height = 100px ])
+
+###1. Update the Models###
+
+ In the **User** model (in App/User) we add:
+```
+    public function profiles()
+    {
+        return $this->hasOne('App\Profile');
+    }
+
+```
+- In the **Profile** model we define the inverse of the relation and add:
+```
+    public function users()
+    {
+        return  $this->belongsTo('App\User');
+
+		/* the above will look for a user_id in the profiles table. If the foreign key has a different name then use */
+		return $this->belongsTo('App\User', 'local_key'); */
+		
+		/* Additionally, you pass a third parameter which specifies the name of the associated column on the parent table: */
+		return $this->belongsTo('App\User', 'local_key', 'parent_key');
+    }
+}
+```
+
+###2. Update the Migrations###
+- We also need to add another column to the profiles table. This column should be a foreign key.
+- Either in the original migration `create_articles_table` or as a new migration which will update the table which we can call `add_foreign_keys_articles_table` we add the following:
+
+```
+$table->integer('user_id')->unsigned();
+
+$table->foreign('user_id')
+	->reference('id')
+	->on('users')
+	->onDelete('cascade') ;
+```
+
+- `onDelete('cascade')` would cause all articles with user_id to be deleted when that user_id is deleted
+- If you added `add_foreign_keys_articles_table`, then also add `$table->dropForeign('user_id');` to the down() function
+
+###3. How Relations are Helpful###
+- Now you can access a users profile info through users like so: `$user = User::find(212)->profile->telephone;`
+
+###4. Adding and Deleting data which is a one-to-one relation ###
+**Adding**
+You can easily create a One-to-One relation by creating the child object and then saving it through
+the parent object, as demonstrated in the below example:
+```
+$profile = new Profile;
+$profile->telephone = '614-867-5309';
+
+$user = User::find(212);
+$user->profile()->save($profile);
+```
+**Deleting**
+```
+$user = User::find(212);
+$user->profile()->delete();
+```

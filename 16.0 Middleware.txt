@@ -1,0 +1,78 @@
+## Middleware are like Ogres ##
+
+- Middleware makes it easy to redirect users who are not logged in to the login page
+
+- It is found in `app\Http\Middleware`
+- Authenticate - used to redirect ppl not logged in
+- RedirectIfAuthenticated - use to redirect user who are logged in
+
+- Register your middleware in `app\Http\kernel`
+	- Everything in the funtion `$middleware` will be done at every single request
+	- `$routeMiddleware` - attaching middleware only to specific routes
+
+So in`app\Http\kernel` we have:
+```
+	protected $routeMiddleware = [
+		'auth' => 'App\Http\Middleware\Authenticate',
+		'auth.basic' => 'Illuminate\Auth\Middleware\AuthenticateWithBasicAuth',
+		'guest' => 'App\Http\Middleware\RedirectIfAuthenticated',
+	];
+```
+And we will now put in `ArticlesController`:
+```
+    public function __construct()
+    {
+        $this->middleware('auth');
+    }
+```
+This means that for the entire ArticlesController, it will use the middleware 'auth' to authenicate the user.
+Now if you are not logged in, any page from the ArcticlesController will redirect you to the login page. 
+
+To apply this not to all of the ArticlesController but only to specific methods we do:
+```
+    public function __construct()
+    {
+        $this->middleware('auth', ['only' => 'create']);
+//or
+        $this->middleware('auth', ['except' => 'index']);
+    }
+```
+
+You can also add the middleware individually to your routes. 
+Eg. In `routes`:
+```
+Route::get('about', ['middleware' => 'auth', 'uses' => 'PagesController@about']);
+
+//or 
+
+Route::get('about', ['middleware' => 'auth', function()
+{
+    return 'this page will only show if the user is signed in';
+}
+]);
+```
+
+- php artisan down - puts application in maintenance mode
+
+**Create our own middleware**
+1. `php artisan make:middleware RedirectIfNotAdmin`
+2. put in RedirectIfNotAdmin:
+```
+	public function handle($request, Closure $next)
+	{
+        if ( ! $request->user()->isAdmin())
+        {
+            return redirect('articles');
+        };
+		return $next($request);
+	}
+```
+3.Add `isAdmin()` function in User model.
+4.Put it in `app\Http\Kernel`
+```
+	protected $routeMiddleware = [
+        'admin' => 'App\Http\Middleware\RedirectIfNotAdmin',
+	];
+```
+5.Now you can add `'middleware' => 'auth'` to routes or controllers as shown above
+
